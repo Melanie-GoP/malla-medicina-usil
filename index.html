@@ -1,1 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Malla de Medicina USIL 2023</title>
+
+  <!-- FUENTE -->
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;700&display=swap" rel="stylesheet" />
+
+  <!-- ESTILO PINK -->
+  <style>
+    :root {
+      --rosa-claro: #f8bbd0;
+      --rosa-fondo: #fff0f5;
+      --rosa-hover: #f48fb1;
+      --rosa-oscuro: #880e4f;
+      --verde-ok:  #2e7d32;
+    }
+
+    * { box-sizing:border-box; }
+    body {
+      margin:0; padding:2rem;
+      font-family:'Crimson Text',serif;
+      background:var(--rosa-fondo);
+      color:var(--rosa-oscuro);
+      text-align:center;
+    }
+    h1 { margin:0 0 1.5rem;font-size:2rem; }
+    h2 { margin:0 0 1rem; }
+
+    /* contenedor de ciclos */
+    .ciclo {
+      background:#ffffff;
+      border-radius:12px;
+      box-shadow:0 2px 8px rgba(0,0,0,.08);
+      padding:1rem;
+      margin:1.2rem 0;
+    }
+
+    /* grid de cursos */
+    .grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+      gap:.6rem;
+    }
+
+    .curso {
+      background:var(--rosa-claro);
+      border:2px solid var(--rosa-oscuro);
+      border-radius:10px;
+      padding:.75rem .5rem;
+      cursor:pointer;
+      transition:background .25s,transform .2s;
+      user-select:none;
+    }
+    .curso:hover { background:var(--rosa-hover); transform:scale(1.04); }
+    .curso.bloqueado { background:#f3e5f5; color:#aaa; border-color:#ce93d8; cursor:not-allowed; }
+    .curso.completado {
+      background:#c8e6c9 !important;
+      border-color:var(--verde-ok);
+      color:var(--verde-ok);
+      text-decoration:line-through;
+    }
+
+    /* barra progreso */
+    .barra {
+      margin-top:.8rem;
+      height:18px;
+      background:#e1bee7;
+      border-radius:10px;
+      position:relative;
+      overflow:hidden;
+    }
+    .barra>span {
+      display:block;
+      height:100%;
+      background:var(--rosa-oscuro);
+      width:0%;
+      transition:width .6s ease;
+    }
+    .barra b {
+      position:absolute; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      font-size:.8rem; color:#fff;
+    }
+
+    /* botón reset */
+    #reset {
+      margin:2rem auto 0;
+      padding:.6rem 1.2rem;
+      background:var(--rosa-oscuro);
+      color:#fff;
+      border:none; border-radius:8px;
+      font-size:1rem; cursor:pointer;
+      transition:opacity .2s;
+    }
+    #reset:hover { opacity:.8; }
+  </style>
+</head>
+
+<body>
+  <h1>🩺 Malla de Medicina USIL 2023</h1>
+  <div id="contenedor"></div>
+  <button id="reset">🔄 Reiniciar malla</button>
+
+  <script>
+  /* =========  DATOS ========= */
+  const cursos = [
+    /* ---------- CICLO 1 ---------- */
+    {id:"atencion_integral", nombre:"👩‍⚕️ Atención Integral", ciclo:1},
+    {id:"desarrollo_humano", nombre:"🧠 Desarrollo Humano", ciclo:1},
+    {id:"english_i", nombre:"🇬🇧 English I", ciclo:1},
+    {id:"fund_promocion_salud", nombre:"🏥 Fund. Promoción y Salud", ciclo:1},
+    {id:"integracion_estructura", nombre:"🧬 Integración Estr. & Func.", ciclo:1},
+    {id:"lenguaje_i", nombre:"✍️ Lenguaje I", ciclo:1},
+
+    /* ---------- CICLO 2 ---------- */
+    {id:"english_ii", nombre:"🇬🇧 English II", ciclo:2, prereq:["english_i"]},
+    {id:"morfo_sist_nerv", nombre:"🧠 Morfofuncional Sist. Nervioso", ciclo:2, prereq:["integracion_estructura"]},
+    {id:"lenguaje_ii", nombre:"✍️ Lenguaje II", ciclo:2, prereq:["lenguaje_i"]},
+    {id:"pens_mat", nombre:"➗ Pensamiento Matemático", ciclo:2},
+    {id:"proc_quim_biol", nombre:"⚗️ Procesos Q‑Biológicos", ciclo:2, prereq:["atencion_integral"]},
+    {id:"pp_med_i", nombre:"🩺 Práctica & Prof. Médico I", ciclo:2},
+
+    /* ---------- CICLO 3 ---------- */
+    {id:"bioestadistica", nombre:"📊 Bioestadística", ciclo:3, prereq:["pens_mat"]},
+    {id:"bioquimica", nombre:"🧪 Bioquímica & Biol. Mol.", ciclo:3, prereq:["proc_quim_biol"]},
+    {id:"english_iii", nombre:"🇬🇧 English III", ciclo:3, prereq:["english_ii"]},
+    {id:"morfo_cardio", nombre:"❤️ Morfofunc. Cardiocirc.", ciclo:3, prereq:["morfo_sist_nerv"]},
+    {id:"morfo_resp", nombre:"🌬️ Morfofunc. Respiratorio", ciclo:3, prereq:["morfo_sist_nerv"]},
+    {id:"nut_estilo", nombre:"🥗 Nut. & Estilos de Vida", ciclo:3, prereq:["proc_quim_biol"]},
+    {id:"pp_med_ii", nombre:"🩺 Práctica & Prof. Médico II", ciclo:3, prereq:["pp_med_i"]},
+
+    /* ---------- CICLO 4 ---------- */
+    {id:"english_iv", nombre:"🇬🇧 English IV", ciclo:4, prereq:["english_iii"]},
+    {id:"genetica", nombre:"🧬 Genética & Enfermedad", ciclo:4, prereq:["integracion_estructura"]},
+    {id:"morfo_digestivo", nombre:"🍽️ Morfofunc. Digestivo", ciclo:4, prereq:["integracion_estructura"]},
+    {id:"morfo_excretor", nombre:"🚰 Morfofunc. Excretor", ciclo:4, prereq:["integracion_estructura"]},
+    {id:"mecan_defensa", nombre:"🛡️ Mecanismos Infección & Defensa", ciclo:4, prereq:["integracion_estructura"]},
+    {id:"metod_invest", nombre:"🔬 Metodología Investigación", ciclo:4, prereq:["bioestadistica"]},
+    {id:"pp_med_iii", nombre:"🩺 Práctica & Prof. Médico III", ciclo:4, prereq:["pp_med_ii"]},
+
+    /* ---------- CICLO 5 ---------- */
+    {id:"english_v", nombre:"🇬🇧 English V", ciclo:5, prereq:["english_iv"]},
+    {id:"epidemiologia", nombre:"📈 Epidemiología", ciclo:5, prereq:["metod_invest"]},
+    {id:"morfo_endocrino", nombre:"🩸 Morfofunc. Endocrino‑Repr.", ciclo:5, prereq:["integracion_estructura"]},
+    {id:"morfo_hema", nombre:"🩸 Morfofunc. Hematopoyético", ciclo:5, prereq:["integracion_estructura"]},
+    {id:"micro_parasito", nombre:"🦠 Microbiología & Parasitología", ciclo:5, prereq:["mecan_defensa"]},
+    {id:"metodos_est_bio", nombre:"📊 Métodos Estadísticos Biociencias", ciclo:5, prereq:["metod_invest"]},
+    {id:"pp_med_iv", nombre:"🩺 Práctica & Prof. Médico IV", ciclo:5, prereq:["pp_med_iii"]},
+
+    /* ---------- CICLO 6 ---------- */
+    {id:"english_vi", nombre:"🇬🇧 English VI: RREL", ciclo:6, prereq:["english_v"]},
+    {id:"farmacologia", nombre:"💊 Farmacología", ciclo:6, prereq:["morfo_resp","morfo_excretor","morfo_digestivo","morfo_endocrino","morfo_hema","micro_parasito"]},
+    {id:"integracion_fisio", nombre:"🫀 Integración Fisiopatológica", ciclo:6, prereq:["morfo_resp","morfo_excretor","morfo_digestivo","morfo_endocrino","morfo_hema","micro_parasito"]},
+    {id:"intro_clinica", nombre:"🩹 Introducción a la Clínica", ciclo:6},
+    {id:"salud_publica", nombre:"🏛️ Salud Pública", ciclo:6, prereq:["epidemiologia"]},
+    {id:"etica", nombre:"⚖️ Ética & Ciudadanía", ciclo:6},
+
+    /* ---------- CICLO 7 ---------- */
+    {id:"diag_comunitario", nombre:"🏘️ Diagnóstico Comunitario", ciclo:7, prereq:["intro_clinica","salud_publica"]},
+    {id:"especialidad_i", nombre:"🏥 Especialidades I", ciclo:7, prereq:["farmacologia","intro_clinica","integracion_fisio","english_vi"]},
+    {id:"fund_edu_salud", nombre:"🎓 Fund. Educación Salud", ciclo:7},
+    {id:"p_nutri_clinica", nombre:"🥦 Princ. Nutrición Clínica", ciclo:7, prereq:["nut_estilo"]},
+    {id:"p4_intro", nombre:"🩻 Intro. Medicina P4", ciclo:7, prereq:["intro_clinica","nut_estilo"]},
+    {id:"realidad_nac", nombre:"🌎 Realidad Nac. & Globalización", ciclo:7},
+    {id:"terapeutica_int", nombre:"💉 Terapéutica Integrada", ciclo:7, prereq:["farmacologia","intro_clinica","integracion_fisio","english_vi"]},
+
+    /* ---------- CICLO 8 ---------- */
+    {id:"especialidad_ii", nombre:"🏥 Especialidades II", ciclo:8, prereq:["english_vi","especialidad_i","terapeutica_int"]},
+    {id:"geriatria", nombre:"👴 Geriatría", ciclo:8, prereq:["english_vi","especialidad_i","terapeutica_int"]},
+    {id:"ingles_med", nombre:"🇬🇧 Inglés Médico", ciclo:8, prereq:["english_vi"]},
+    {id:"liderazgo", nombre:"🫱🏽‍🫲🏼 Liderazgo & Valores", ciclo:8},
+    {id:"med_fis_deporte", nombre:"🏃‍♂️ Med. Física & Deporte", ciclo:8, prereq:["english_vi","especialidad_i","terapeutica_int"]},
+    {id:"nut_funcional", nombre:"🥑 Nutrición Funcional Aplicada", ciclo:8, prereq:["p_nutri_clinica","p4_intro"]},
+    {id:"salud_mental", nombre:"🧘 Salud Mental & Psiquiatría", ciclo:8, prereq:["farmacologia","intro_clinica","integracion_fisio","english_vi"]},
+
+    /* ---------- CICLO 9 ---------- */
+    {id:"aplicacion_p4", nombre:"🩻 Aplicación Clínica P4", ciclo:9, prereq:["nut_funcional"]},
+    {id:"cirugia_trauma", nombre:"🔪 Cirugía & Traumatología", ciclo:9, prereq:["salud_mental","geriatria","especialidad_ii","med_fis_deporte"]},
+    {id:"gestion_salud", nombre:"🏛️ Gestión en Salud", ciclo:9, prereq:["salud_publica","especialidad_ii"]},
+    {id:"oncologia", nombre:"🎗️ Oncología Médica", ciclo:9, prereq:["salud_mental","geriatria","especialidad_ii","med_fis_deporte"]},
+    {id:"salud_global", nombre:"🌐 Salud Global & Sist. Salud", ciclo:9, prereq:["salud_publica"]},
+    {id:"tesis_i", nombre:"📑 Tesis I", ciclo:9},
+
+    /* ---------- CICLO 10 ---------- */
+    {id:"aspectos_legales", nombre:"📜 Aspectos Legales & Forense", ciclo:10, prereq:["cirugia_trauma","oncologia"]},
+    {id:"emerg_desastres", nombre:"🚑 Emergencias & Desastres", ciclo:10, prereq:["cirugia_trauma","oncologia"]},
+    {id:"gineco_ob", nombre:"🤰 Ginecología & Obstetricia", ciclo:10, prereq:["cirugia_trauma","oncologia"]},
+    {id:"intro_actividad_fis", nombre:"🏃 Introducción Activ. Física", ciclo:10},
+    {id:"liderazgo_innova", nombre:"💡 Liderazgo & Emprendimiento", ciclo:10, prereq:["salud_global","gestion_salud"]},
+    {id:"pediatria", nombre:"🧒 Pediatría", ciclo:10, prereq:["cirugia_trauma","oncologia"]},
+    {id:"ultrasonido_poc", nombre:"🖥️ Ultrasonido POC", ciclo:10},
+
+    /* ---------- CICLO 11 ---------- */
+    {id:"aleman", nombre:"🇩🇪 Alemán I", ciclo:11},
+    {id:"extern_cirugia", nombre:"🏥 Externado Cirugía", ciclo:11},
+    {id:"extern_med", nombre:"🏥 Externado Medicina", ciclo:11},
+    {id:"extern_rot1", nombre:"🔄 Externado Rotatorio I", ciclo:11},
+    {id:"extern_rot2", nombre:"🔄 Externado Rotatorio II", ciclo:11},
+    {id:"frances", nombre:"🇫🇷 Francés I", ciclo:11},
+    {id:"italiano", nombre:"🇮🇹 Italiano I", ciclo:11},
+    {id:"portugues", nombre:"🇵🇹 Portugués I", ciclo:11},
+    {id:"tesis_ii", nombre:"📑 Tesis II", ciclo:11, prereq:["tesis_i"]},
+
+    /* ---------- CICLO 12 ---------- */
+    {id:"bioetica", nombre:"⚖️ Bioética", ciclo:12, prereq:["tesis_i"]},
+    {id:"extern_gineco", nombre:"🏥 Externado Gineco‑Obstetricia", ciclo:12},
+    {id:"extern_ped", nombre:"🏥 Externado Pediatría", ciclo:12},
+
+    /* ---------- CICLO 13 ---------- */
+    {id:"intern_med", nombre:"🏥 Internado Medicina", ciclo:13},
+    {id:"intern_ped", nombre:"🏥 Internado Pediatría", ciclo:13},
+
+    /* ---------- CICLO 14 ---------- */
+    {id:"intern_cir", nombre:"🏥 Internado Cirugía", ciclo:14},
+    {id:"intern_gineco", nombre:"🏥 Internado Ginecología & Obstetricia", ciclo:14},
+  ];
+
+  /* =========  LÓGICA ========= */
+  const estado = JSON.parse(localStorage.getItem("estadoCursos")||"{}");
+
+  const contenedor = document.getElementById("contenedor");
+  document.getElementById("reset").onclick = () => {
+    if(confirm("¿Reiniciar estados?")){
+      cursos.forEach(c=>estado[c.id]=false);
+      guardarYRender();
+    }
+  };
+
+  function puedeDesbloquear(curso){
+    if(!curso.prereq) return true;
+    return curso.prereq.every(id=>estado[id]);
+  }
+
+  function toggle(id){
+    if(!puedeDesbloquear(cursos.find(c=>c.id===id))) return;
+    estado[id]=!estado[id];
+    guardarYRender();
+  }
+
+  function guardarYRender(){
+    localStorage.setItem("estadoCursos",JSON.stringify(estado));
+    render();
+  }
+
+  function render(){
+    contenedor.innerHTML="";
+    const ciclosAgrup = {};
+    cursos.forEach(c=>{
+      if(!ciclosAgrup[c.ciclo]) ciclosAgrup[c.ciclo]=[];
+      ciclosAgrup[c.ciclo].push(c);
+    });
+
+    Object.keys(ciclosAgrup).sort((a,b)=>a-b).forEach(n=>{
+      const divCiclo=document.createElement("div");
+      divCiclo.className="ciclo";
+
+      const h=document.createElement("h2");
+      h.textContent=`Ciclo ${n}`;
+      divCiclo.appendChild(h);
+
+      const grid=document.createElement("div");
+      grid.className="grid";
+      divCiclo.appendChild(grid);
+
+      let comps=0,total=ciclosAgrup[n].length;
+
+      ciclosAgrup[n].forEach(c=>{
+        const d=document.createElement("div");
+        d.className="curso";
+        d.textContent=c.nombre;
+        if(estado[c.id]){
+          d.classList.add("completado"); comps++;
+        }else if(!puedeDesbloquear(c)){
+          d.classList.add("bloqueado");
+        }
+        d.onclick=()=>toggle(c.id);
+        grid.appendChild(d);
+      });
+
+      const barra=document.createElement("div");
+      barra.className="barra";
+      const interno=document.createElement("span");
+      const pct=Math.round((comps/total)*100);
+      interno.style.width=pct+"%";
+      const texto=document.createElement("b");
+      texto.textContent=pct+"%";
+      barra.appendChild(interno); barra.appendChild(texto);
+      divCiclo.appendChild(barra);
+
+      contenedor.appendChild(divCiclo);
+    });
+  }
+
+  guardarYRender(); // primera vez
+  </script>
+</body>
+</html>
 
